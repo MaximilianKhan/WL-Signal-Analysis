@@ -65,7 +65,7 @@ def get_peaks_and_times(data, time):
         # Computing the gradients gives values of 0.0 inaccurately. But, within a range of values close to zero, we get our desired points. 
         # Experiments reveal that finding a signal from its troph is more accurate than its peaks.
         # So, we will look below our threshhold of 50 mV for points that are close to a gradient of zero.
-        if (np.abs(x) < 0.0045) and (data[counter] < -0.05):
+        if (np.abs(x) < 0.0050) and (data[counter] < -0.05):
             times_of_peaks.append(time[counter])
             values_for_peaks.append(data[counter])
             peak_indexes.append(counter)
@@ -121,6 +121,11 @@ inst_freq, time = get_instantaneous_frequency(amp_data)
 # Get the peaks and the times at which they occur.
 values_for_peaks, times_of_peaks, peak_indexes = get_peaks_and_times(amp_data, time)
 
+
+# Before I continue here, and add extra computational cost, I should clean the value_for_peak array. 
+# We cannot have peak values too close together. Perhaps this is where frequency analysis comes into play. 
+
+
 # Get where the ramps occur. 
 non_null_length_values, times_of_lengths, length_indexes = get_non_null_lengths_and_times(length_data, time)
 
@@ -129,7 +134,24 @@ peaks_during_ramp, good_peak_times = get_peaks_during_ramps(peak_indexes, length
 
 
 # TBC... now you have to do something with those peaks during the ramp... 
+# Now, I have to use time to capture the wave using the troph peak.
+# Time step forward: 0.0025
+# Backward: 0.002
 
+# Get the number of troph points that will be anlayzed -> Number of signals saved
+# Create an np array based on the number of signals found. 
+# Loop through the trophs, and save the data forward and backward of the signal in a row in the np array. 
+number_of_signals = len(peaks_during_ramp)
+signal_waves = np.empty([number_of_signals, 1])
+for x in good_peak_times:
+    # Using the time at which the troph occured...
+    starting_time = x - 0.0020
+    ending_time = x + 0.00250
+    # Now find the indexes for which the starting and ending times occured. 
+    starting_index = np.where(time == starting_time)
+    ending_index = np.where(time == ending_time)
+    print('Starting index: %s • Ending index: %s • Peak time: %s\tFor interval: %s to %s' 
+        %(starting_index[0], ending_index[0], x, starting_time, ending_time))
 
 # Graph our amplitude and inst_freq side-by-side.
 print('Plotting data.') 
