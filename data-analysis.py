@@ -25,7 +25,7 @@ def get_instantaneous_frequency(data_vector):
 
     total_seconds = len(data_vector) / samplerate
     total_minutes = total_seconds / 60
-    print('Total seconds: %s' %(total_seconds))
+    print('Observing file data interval of %s seconds.' %(total_seconds))
 
     duration = total_seconds
     samples = int(fs * duration)
@@ -55,6 +55,7 @@ def perform_inst_comp(vector1, vector2):
 
 def get_peaks_and_times(data, time):
     # Compute gradients to find where derivitives are zero.
+    # I've found that np.gradient is more accurate than doing it manually. 
     gradient_of_data = np.gradient(data)
 
     counter = 0
@@ -92,13 +93,47 @@ def get_non_null_lengths_and_times(data, time):
 def get_peaks_during_ramps(peak_indexes, length_indexes, amp_data, time):
     peaks_during_ramp = []
     good_peak_times = []
+    good_peak_indexes = []
     for x in peak_indexes:
         for y in length_indexes:
             if x == y:
                 peaks_during_ramp.append(amp_data[x])
                 good_peak_times.append(time[x])
+                good_peak_indexes.append(x)
 
-    return peaks_during_ramp, good_peak_times
+    return peaks_during_ramp, good_peak_times, good_peak_indexes
+
+def get_wave_interval_indices(good_peak_indexes):
+    # Now, I have to use time to capture the wave using the troph peak.
+    # Time step forward: 0.0025
+    # Backward: 0.002
+
+    # Get the number of troph points that will be anlayzed -> Number of signals saved
+    # Create an np array based on the number of signals found. 
+    # Loop through the trophs, and save the data forward and backward of the signal in a row in the np array. 
+    number_of_signals = len(good_peak_indexes)
+    # The first column will contain the starting index, and the second will be the ending index. 
+    signal_wave_intervals = np.empty([number_of_signals, 2])
+
+    counter = 0
+    for i in good_peak_indexes:
+        # So know we know the index for where the peak occured. 
+        # Now, find the indexes for where the start and end times should be 
+
+        # This is the samplerate per second
+        samplerate = 20000
+        subtract_num = samplerate * 0.0025
+        add_num = samplerate * 0.002
+
+        starting_index = i - int(subtract_num)
+        ending_index = i - int(add_num)
+
+        signal_wave_intervals[counter][0] = starting_index
+        signal_wave_intervals[counter][1] = ending_index
+
+        counter += 1
+
+    return signal_wave_intervals
 
 #====================================================================================
 # Main
@@ -122,38 +157,28 @@ inst_freq, time = get_instantaneous_frequency(amp_data)
 values_for_peaks, times_of_peaks, peak_indexes = get_peaks_and_times(amp_data, time)
 
 
+
 # Before I continue here, and add extra computational cost, I should clean the value_for_peak array. 
 # We cannot have peak values too close together. Perhaps this is where frequency analysis comes into play. 
 
 
-# Get where the ramps occur. 
+
+# Find where the ramps and event markers occur. 
+# Maybe later use clustering to differentiate between the event markers and ramps. 
 non_null_length_values, times_of_lengths, length_indexes = get_non_null_lengths_and_times(length_data, time)
 
-# Now find the peaks in range of the ramps. 
-peaks_during_ramp, good_peak_times = get_peaks_during_ramps(peak_indexes, length_indexes, amp_data, time)
+# Find the peaks in range of the ramps. 
+peaks_during_ramp, good_peak_times, good_peak_indexes = get_peaks_during_ramps(peak_indexes, length_indexes, amp_data, time)
+
+# Find the indice interval of the signals during the ramp. 
+signal_wave_intervals = get_wave_interval_indices(good_peak_indexes)
 
 
-# TBC... now you have to do something with those peaks during the ramp... 
-# Now, I have to use time to capture the wave using the troph peak.
-# Time step forward: 0.0025
-# Backward: 0.002
 
-# Get the number of troph points that will be anlayzed -> Number of signals saved
-# Create an np array based on the number of signals found. 
-# Loop through the trophs, and save the data forward and backward of the signal in a row in the np array. 
-number_of_signals = len(peaks_during_ramp)
-signal_waves = np.empty([number_of_signals, 1])
-for x in good_peak_times:
-    # Using the time at which the troph occured...
-    starting_time = x - 0.0020
-    ending_time = x + 0.00250
-    # Now find the indexes for which the starting and ending times occured. 
-    starting_index = np.where(time == starting_time)
-    ending_index = np.where(time == ending_time)
-    print('Starting index: %s • Ending index: %s • Peak time: %s\tFor interval: %s to %s' 
-        %(starting_index[0], ending_index[0], x, starting_time, ending_time))
+# Now, go and get the data for where the signals exist using  signal_value_intervals. 
 
-# Graph our amplitude and inst_freq side-by-side.
+
+
 print('Plotting data.') 
 fig = plt.figure()
 
