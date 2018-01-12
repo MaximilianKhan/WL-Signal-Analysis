@@ -82,7 +82,8 @@ def get_non_null_lengths_and_times(data, time):
     for x in length_data:
         # Since the length channel doesn't actually hold values constant, I tested that this was a fair 
         # baseline value to judge off-of. 
-        if x > 0.0000025:
+        # I am doing np.abs to account for vibrations. 
+        if np.abs(x) > 0.0000025:
             non_null_length_values.append(x)
             times_of_lengths.append(time[count])
             length_indexes.append(count)
@@ -105,8 +106,8 @@ def get_peaks_during_ramps(peak_indexes, length_indexes, amp_data, time):
 
 def get_wave_interval_indices(good_peak_indexes):
     # Now, I have to use time to capture the wave using the troph peak.
-    # Time step forward: 0.0025
-    # Backward: 0.002
+    # Time step forward: 0.0030
+    # Backward: 0.0020
 
     # Get the number of troph points that will be anlayzed -> Number of signals saved
     # Create an np array based on the number of signals found. 
@@ -122,11 +123,11 @@ def get_wave_interval_indices(good_peak_indexes):
 
         # This is the samplerate per second
         samplerate = 20000
-        subtract_num = samplerate * 0.0025
-        add_num = samplerate * 0.002
+        subtract_num = samplerate * 0.0030
+        add_num = samplerate * 0.0020
 
         starting_index = i - int(subtract_num)
-        ending_index = i - int(add_num)
+        ending_index = i + int(add_num)
 
         signal_wave_intervals[counter][0] = starting_index
         signal_wave_intervals[counter][1] = ending_index
@@ -135,11 +136,30 @@ def get_wave_interval_indices(good_peak_indexes):
 
     return signal_wave_intervals
 
+def get_possible_signals(amp_data, time, signal_wave_intervals):
+    # Now, go and get the data for where the signals exist using signal_value_intervals. 
+    signals_found = []
+    time_of_signals_found = []
+    for signal in signal_wave_intervals:
+        starting_index = int(signal[0])
+        ending_index = int(signal[1])
+        # print('Starting: %s • Ending: %s' %(starting_index, ending_index))
+
+        signals_found.append(amp_data[starting_index:ending_index])
+        time_of_signals_found.append(time[starting_index:ending_index])
+
+    signals_found = np.array(signals_found)
+    time_of_signals_found = np.array(time_of_signals_found)
+
+    return signals_found, time_of_signals_found
+
 #====================================================================================
 # Main
 #====================================================================================
 
 UPPER_BOUND = 800000
+
+print('Starting analysis.')
 
 # Make sure that labchart exports everything with a constant sampling rate. 
 amp_data = get_data('amp-data.mat')
@@ -173,31 +193,39 @@ peaks_during_ramp, good_peak_times, good_peak_indexes = get_peaks_during_ramps(p
 # Find the indice interval of the signals during the ramp. 
 signal_wave_intervals = get_wave_interval_indices(good_peak_indexes)
 
-
-
 # Now, go and get the data for where the signals exist using  signal_value_intervals. 
+signals_found, time_of_signals_found = get_possible_signals(amp_data, time, signal_wave_intervals)
 
 
+# Now with getting our signals during the ramp working, I need to disciminate which are signals and which are not. 
+
+
+# Finished analysis
+print('Analysis complete.')
 
 print('Plotting data.') 
 fig = plt.figure()
-
 # Signal
-ax0 = fig.add_subplot(311)
+ax0 = fig.add_subplot(411)
 ax0.set_title('Signal')
 ax0.plot(time[:], amp_data)
 ax0.plot(times_of_peaks, values_for_peaks, 'ro')
 ax0.plot(good_peak_times, peaks_during_ramp, 'go')
 
 # Length
-ax1 = fig.add_subplot(312)
+ax1 = fig.add_subplot(412)
 ax1.set_title('Length')
 ax1.plot(time[:], length_data)
 ax1.plot(times_of_lengths, non_null_length_values, 'ro')
 
 # Instantaneous Frequency
-ax2 = fig.add_subplot(313)
+ax2 = fig.add_subplot(413)
 ax2.set_title('Instantaneous Frequency')
 ax2.plot(time[1:], inst_freq)
+
+# Found signals
+ax3 = fig.add_subplot(414)
+ax3.set_title('Signals Found')
+ax3.scatter(time_of_signals_found.ravel(), signals_found.ravel())
 
 plt.show()
