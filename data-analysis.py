@@ -209,9 +209,21 @@ print('(6/7) Calculated possible signals.')
 
 # Now with getting our signals during the ramp working, I need to disciminate which are signals and which are not. 
 
-# AMAZINGLY, THE LENGTH OF EACH SIGNAL VECTOR IS 100!!!!!
+# AMAZING, THE LENGTH OF EACH SIGNAL VECTOR IS 100!!!!!
 np.savetxt('signals.csv', signals_found, delimiter=',')
 print('(7/7) Saved possible signals.')
+
+
+
+# Now that I have hand classified wave forms, I need to train a machine learning application to properly 
+# differentiate between what is and is not a signal. 
+# I will creating a training and testing program in separate files, save the weights and biases that are 
+# accurate in some weights file (I believe that you can save tensorboard models and load them).
+# After I have effectively created a working model, I will import it here to evaluate my possible signals. 
+
+
+# In the end of my program, I will spit out the desired that the lab is looking for, using the data that I 
+# calculated. 
 
 
 # Finished analysis
