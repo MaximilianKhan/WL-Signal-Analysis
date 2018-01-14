@@ -1,0 +1,58 @@
+Channels:
+	- Time
+	- Tension (Mean)
+	- Tension (Time @ Maximum Value)
+	- Tension (time @ minimum value)
+	- Tension (value @ selection)
+	- Length (maximum value)
+	- Length (time at maximum)
+
+	- Instantaneous Frequency (Mean)
+	- Instantaneous Frequency (Max)
+
+	- Event Marker
+
+Rate of data should be @ every 0.05 seconds / 0.01 seconds.
+
+Values for analysis:
+	- Cumulative baseline average (resting discharge)
+	- Individual baseline average (it is taking the average of an individual signal, 
+	followed throughout the course of the baseline)
+
+	(Instantaneous Frequency)
+	- DP (Up Ramp)
+	- IST (0.4 - 0.5 seconds)
+	- FST (3.25 - 3.75 seconds)
+	- Dyanamic Index (DI) (FST - IST)
+	
+	- Average 50 hz (vibrations)
+	- Average 100 hx (vibrations)
+
+	- A lot of the values recorded will be based off of the tension and instantaneous frequency channels & values.
+
+Datapad columns:
+	a. Time
+	b. Instantaneous Frequency
+	c. Length
+	d. Tension
+	e. OFF
+
+=====================================
+
+I propose that we stop using the spike histogram to determine the instantaneous frequency of our signal,
+and instead turn to taking the data of our signal, and applying the hilbert transformation to it inside of our code.
+
+This will completely automate the need to open the spike histogram software, and leave the computer to automate the work.
+
+The spike histogram was actually used to identify where we had peak signal values. People then manually thumbed through those
+values to determine which ones were actually valid signals. Since we will be using machine learning to figure out which of our 
+signals are actually values, and in turn do not need to manually analyze valid signals, the use of the spike histogram becomes obsolete.
+
+
+Datapad columns:
+	a. Time (s)
+	b. Channel 1 Amp (mV)
+	c. Length (mm)
+	d. Tension (mN)
+
+We will be sampling the data every 0.05 seconds.

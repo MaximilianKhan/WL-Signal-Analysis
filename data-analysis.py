@@ -3,6 +3,7 @@ from scipy.io import loadmat
 from scipy.signal import hilbert, chirp
 import matplotlib.pyplot as plt
 import numpy as np 
+import timeit
 
 #====================================================================================
 # Functions
@@ -91,6 +92,7 @@ def get_non_null_lengths_and_times(data, time):
 
     return non_null_length_values, times_of_lengths, length_indexes
 
+# Fix this function to be more efficient
 def get_peaks_during_ramps(peak_indexes, length_indexes, amp_data, time):
     peaks_during_ramp = []
     good_peak_times = []
@@ -101,6 +103,7 @@ def get_peaks_during_ramps(peak_indexes, length_indexes, amp_data, time):
                 peaks_during_ramp.append(amp_data[x])
                 good_peak_times.append(time[x])
                 good_peak_indexes.append(x)
+                continue
 
     return peaks_during_ramp, good_peak_times, good_peak_indexes
 
@@ -160,21 +163,24 @@ def get_possible_signals(amp_data, time, signal_wave_intervals):
 UPPER_BOUND = 800000
 
 print('Starting analysis.')
+start = timeit.default_timer()
 
 # Make sure that labchart exports everything with a constant sampling rate. 
 amp_data = get_data('amp-data.mat')
 length_data = get_data('length-data.mat')
 
 # For testing purposes, we are limiting the size of our used data to accomodate for time of calculations. 
-amp_data = amp_data[:UPPER_BOUND]
-length_data = length_data[:UPPER_BOUND]
+# amp_data = amp_data[:UPPER_BOUND]
+# length_data = length_data[:UPPER_BOUND]
 
 # Get the instantaneous frequency of our signal, and an array containing a series of our time for which the data occurs over. 
 # I will most likely have to get the indexes for the inst_freq peaks as well...
 inst_freq, time = get_instantaneous_frequency(amp_data)
+print('(1/7) Calculated instantaneous frequency.')
 
 # Get the peaks and the times at which they occur.
 values_for_peaks, times_of_peaks, peak_indexes = get_peaks_and_times(amp_data, time)
+print('(2/7) Calculated peaks.')
 
 
 
@@ -186,22 +192,31 @@ values_for_peaks, times_of_peaks, peak_indexes = get_peaks_and_times(amp_data, t
 # Find where the ramps and event markers occur. 
 # Maybe later use clustering to differentiate between the event markers and ramps. 
 non_null_length_values, times_of_lengths, length_indexes = get_non_null_lengths_and_times(length_data, time)
+print('(3/7) Calculated ramps and vibrations.')
 
 # Find the peaks in range of the ramps. 
 peaks_during_ramp, good_peak_times, good_peak_indexes = get_peaks_during_ramps(peak_indexes, length_indexes, amp_data, time)
+print('(4/7) Calculated peaks during ramps and vibrations.')
 
 # Find the indice interval of the signals during the ramp. 
 signal_wave_intervals = get_wave_interval_indices(good_peak_indexes)
+print('(5/7) Calculated signal intervals.')
 
 # Now, go and get the data for where the signals exist using  signal_value_intervals. 
 signals_found, time_of_signals_found = get_possible_signals(amp_data, time, signal_wave_intervals)
+print('(6/7) Calculated possible signals.')
 
 
 # Now with getting our signals during the ramp working, I need to disciminate which are signals and which are not. 
 
+# AMAZINGLY, THE LENGTH OF EACH SIGNAL VECTOR IS 100!!!!!
+np.savetxt('signals.csv', signals_found, delimiter=',')
+print('(7/7) Saved possible signals.')
+
 
 # Finished analysis
-print('Analysis complete.')
+stop = timeit.default_timer()
+print('Analysis complete. Took %s seconds.' %(stop - start))
 
 print('Plotting data.') 
 fig = plt.figure()
