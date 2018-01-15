@@ -170,8 +170,8 @@ amp_data = get_data('amp-data.mat')
 length_data = get_data('length-data.mat')
 
 # For testing purposes, we are limiting the size of our used data to accomodate for time of calculations. 
-# amp_data = amp_data[:UPPER_BOUND]
-# length_data = length_data[:UPPER_BOUND]
+amp_data = amp_data[:UPPER_BOUND]
+length_data = length_data[:UPPER_BOUND]
 
 # Get the instantaneous frequency of our signal, and an array containing a series of our time for which the data occurs over. 
 # I will most likely have to get the indexes for the inst_freq peaks as well...
@@ -209,9 +209,9 @@ print('(6/7) Calculated possible signals.')
 
 # Now with getting our signals during the ramp working, I need to disciminate which are signals and which are not. 
 
-# AMAZING, THE LENGTH OF EACH SIGNAL VECTOR IS 100!!!!!
-np.savetxt('signals.csv', signals_found, delimiter=',')
-print('(7/7) Saved possible signals.')
+# The length of each signal vector is 100 indices.
+# np.savetxt('signals.csv', signals_found, delimiter=',')
+print('(7/7) SKIPPING: Saved possible signals.')
 
 
 
