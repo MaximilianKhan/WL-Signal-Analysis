@@ -1,6 +1,7 @@
 import os
 from scipy.io import loadmat
 from scipy.signal import hilbert, chirp
+from scipy.stats import mode 
 import matplotlib.pyplot as plt
 import numpy as np 
 import timeit
@@ -76,15 +77,16 @@ def get_peaks_and_times(data, time):
     return values_for_peaks, times_of_peaks, peak_indexes
 
 def get_non_null_lengths_and_times(data, time):
-    count = 0 
+    count = 0
+    data_mode = mode(data, axis=None)[0]
     non_null_length_values = []
     times_of_lengths = []
     length_indexes = []
     for x in length_data:
-        # Since the length channel doesn't actually hold values constant, I tested that this was a fair 
-        # baseline value to judge off-of. 
-        # I am doing np.abs to account for vibrations. 
-        if np.abs(x) > 0.0000025:
+        # Because the average baseline length varies from file to file, we are taking the mode value for 
+        # length and having it be a lower bound, plus an observed amount that accounts for baseline length variation.
+        # Also, this accounts not only for ramps, but also vibrations.
+        if x > data_mode + 0.0000025:
             non_null_length_values.append(x)
             times_of_lengths.append(time[count])
             length_indexes.append(count)
@@ -166,8 +168,8 @@ print('Starting analysis.')
 start = timeit.default_timer()
 
 # Make sure that labchart exports everything with a constant sampling rate. 
-amp_data = get_data('amp-data.mat')
-length_data = get_data('length-data.mat')
+amp_data = get_data('amp-data-2.mat')
+length_data = get_data('length-data-2.mat')
 
 # For testing purposes, we are limiting the size of our used data to accomodate for time of calculations. 
 amp_data = amp_data[:UPPER_BOUND]
