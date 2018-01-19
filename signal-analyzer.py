@@ -15,7 +15,7 @@ print('Size of signal: %s datapoints' %(size_of_signal))
 # In the 101th column of the csv file, I will manually enter a 0 or 1. 
 # A 0 will signify that the data is not valid, and the reverse for a 1. 
 
-individual_signal_index = 2432
+individual_signal_index = 700
 print('Observing signal #%s' %(individual_signal_index + 1))
 # Exclude the 101th column, or 100th index, because that is where I will be storing the classification. 
 individual_signal = signals_file.loc[individual_signal_index, 0:99]

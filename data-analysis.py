@@ -86,7 +86,7 @@ def get_non_null_lengths_and_times(data, time):
         # Because the average baseline length varies from file to file, we are taking the mode value for 
         # length and having it be a lower bound, plus an observed amount that accounts for baseline length variation.
         # Also, this accounts not only for ramps, but also vibrations.
-        if x > data_mode + 0.0000025:
+        if (x > data_mode + 0.0000025) or (x < data_mode - 0.0000025):
             non_null_length_values.append(x)
             times_of_lengths.append(time[count])
             length_indexes.append(count)
@@ -212,7 +212,7 @@ print('(6/7) Calculated possible signals.')
 # Now with getting our signals during the ramp working, I need to disciminate which are signals and which are not. 
 
 # The length of each signal vector is 100 indices.
-# np.savetxt('signals.csv', signals_found, delimiter=',')
+# np.savetxt('signals-1.csv', signals_found, delimiter=',')
 print('(7/7) SKIPPING: Saved possible signals.')
 
 
